@@ -12,10 +12,10 @@ README files found in this repository.**
 
 | Team Member | Student Name           | Email Address               | Role                    |
 |-------------|------------------------|-----------------------------|-------------------------|
-| 1           |                        |                             | Team Lead               |
-| 2           |                        |                             | Database Architect      |
-| 3           |                        |                             | Database Developer      |
-| 4           |                        |                             | Database Analyst/Tester |
+| 1           | Jared Aung             | yaung2@sfsu.edu             | Team Lead               |
+| 2           | Jared Aung             |                             | Database Architect      |
+| 3           | Jared Aung             |                             | Database Developer      |
+| 4           | Jared Aung             |                             | Database Analyst/Tester |
 
 
 --- 
