@@ -5,8 +5,8 @@ USE MultiMediaDB;
 -- Automatically remove the oldest item if the user adds an item exceeding the limit.
 
 DROP TRIGGER IF EXISTS TRG_WATCHLIST_CAP;
-DELIMITER $$
 
+DELIMITER $$
 CREATE TRIGGER TRG_WATCHLIST_CAP BEFORE INSERT ON WatchList
 FOR EACH ROW
 BEGIN
@@ -19,7 +19,7 @@ BEGIN
                 WHERE idUser = NEW.idUser);
 
     -- If already at or above limit, remove oldest item
-    IF count >= 50 THEN
+    IF count > 50 THEN
         SET oldest_id = (SELECT idContent FROM Watchlist
                         WHERE idUser = NEW.idUser
                         ORDER BY time_added ASC
@@ -29,15 +29,18 @@ BEGIN
         WHERE idUser = NEW.idUser
         AND idContent = oldest_id;
     END IF;
+
 END $$
 
 DELIMITER ;
+SELECT * FROM Watchlist;
+INSERT INTO Watchlist(IDUSER, IDCONTENT) VALUES (1,66);
 
 # 2. Rating Impact on Content Availability
 #
 # Automatically set the Content_Availability status to "Archived" if the average rating of a piece of Content falls below 2.0 after a new review is added.
 
-
+-- WORKS
 DROP TRIGGER IF EXISTS SET_ARCHIVED;
 
 DELIMITER $$
@@ -94,4 +97,11 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+SELECT * FROM Director_Assignment_Errors;
+SELECT * FROM Directed_Content;
+INSERT INTO Directed_Content(IDCONTENT, IDDIRECTOR) VALUES (1,1);
+
+ALTER TABLE Directed_Content DROP INDEX uniq_director_content;
+
 

@@ -62,4 +62,56 @@ CALL SET_UNAVAILABLE_FOR_LOW_VIEW_CONTENT();
 # 9. Handle Failed Payments
 # Log failed payment attempts into a Payment_Errors table.
 # Send notifications to affected users regarding the failed payments.
+DROP TABLE Payment_Errors;
+CREATE TABLE Payment_Errors(
+    idError INT NOT NULL AUTO_INCREMENT,
+    idTransaction INT NOT NULL,
+    idUser INT NOT NULL,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (idError),
+    UNIQUE (idTransaction),
+    CONSTRAINT FK_PaymentError_Transaction
+    FOREIGN KEY (idTransaction) REFERENCES Transaction(idTransaction)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT FK_PaymentError_User
+    FOREIGN KEY(idUser) REFERENCES User(idUser)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
 
+
+DROP PROCEDURE LOG_FAILED_PAYMENTS;
+
+DELIMITER $$
+
+CREATE PROCEDURE LOG_FAILED_PAYMENTS()
+BEGIN
+    INSERT IGNORE INTO Payment_Errors(idTransaction, idUser, error_message)
+    SELECT T.idTransaction, U.idUser, CONCAT(U.username,' payment of $', T.amount, ' has failed')
+    FROM MultiMediaDB.Transaction T
+    JOIN MultiMediaDB.User_Subscriptions US on T.idUserSub = US.idUserSub
+    JOIN MultiMediaDB.User U on U.idUser = US.idUser
+    WHERE T.status = 'fail';
+
+    INSERT IGNORE INTO NOTIFICATIONS(MESSAGE, IDUSER)
+    SELECT PE.error_message,PE.idUser
+    FROM Payment_Errors PE
+    LEFT JOIN NOTIFICATIONS N ON N.message = PE.error_message AND N.idUser = PE.idUser
+    WHERE N.idNotification IS NULL;
+
+
+
+end $$
+
+DELIMITER ;
+
+
+
+
+-- Works
+SELECT * FROM NOTIFICATIONS ;
+SELECT * FROM MultiMediaDB.Payment_Errors;
+INSERT INTO User_Subscriptions(idSubscription, end_on, idUser, status) VALUES (3,'2025-06-20',4,1);
+INSERT INTO MultiMediaDB.Transaction(idUserSub, idMethod, amount, status) VALUES (20,14,12.40,'fail');
+
+CALL LOG_FAILED_PAYMENTS();
