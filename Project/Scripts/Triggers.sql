@@ -4,10 +4,19 @@ USE MultiMediaDB;
 -- Enforce a maximum of 50 items in a user's Watchlist.
 -- Automatically remove the oldest item if the user adds an item exceeding the limit.
 
-DROP TRIGGER IF EXISTS TRG_WATCHLIST_CAP;
+CREATE TABLE Watchlist_Request (
+    idUser INT NOT NULL,
+    idContent INT NOT NULL,
+    date_requested DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (idUser, idContent),
+    FOREIGN KEY (idUser) REFERENCES User(idUser),
+    FOREIGN KEY (idContent) REFERENCES Content(idContent)
+);
 
+DROP TRIGGER IF EXISTS TRG_WATCHLIST_CAP;
 DELIMITER $$
-CREATE TRIGGER TRG_WATCHLIST_CAP BEFORE INSERT ON WatchList
+
+CREATE TRIGGER TRG_WATCHLIST_CAP BEFORE INSERT ON Watchlist_Request
 FOR EACH ROW
 BEGIN
     DECLARE count INT DEFAULT 0;
@@ -19,7 +28,7 @@ BEGIN
                 WHERE idUser = NEW.idUser);
 
     -- If already at or above limit, remove oldest item
-    IF count > 50 THEN
+    IF count >= 50 THEN
         SET oldest_id = (SELECT idContent FROM Watchlist
                         WHERE idUser = NEW.idUser
                         ORDER BY time_added ASC
@@ -30,17 +39,21 @@ BEGIN
         AND idContent = oldest_id;
     END IF;
 
+    INSERT INTO Watchlist(idUser, idContent) VALUES (NEW.idUser,NEW.idContent);
 END $$
 
 DELIMITER ;
-SELECT * FROM Watchlist;
-INSERT INTO Watchlist(IDUSER, IDCONTENT) VALUES (1,66);
 
+-- WORKS
+SELECT * FROM Watchlist;
+INSERT INTO Watchlist_Request(idUser, idContent) VALUES (1,200);
+
+DELETE FROM Watchlist WHERE idContent = 66;
 # 2. Rating Impact on Content Availability
 #
 # Automatically set the Content_Availability status to "Archived" if the average rating of a piece of Content falls below 2.0 after a new review is added.
 
--- WORKS
+
 DROP TRIGGER IF EXISTS SET_ARCHIVED;
 
 DELIMITER $$
@@ -64,44 +77,51 @@ FOR EACH ROW
 DELIMITER ;
 
 
-# . Ensure Unique Director for Content
+# Ensure Unique Director for Content
+#
 # Prevent duplicate Director entries for the same Content.
 # Log any failed attempts to assign a duplicate director into a Director_Assignment_Errors table.
-DROP TRIGGER IF EXISTS TRG_Duplicate_Director;
+CREATE TABLE Directed_Content_Request (
+    idContent INT,
+    idDirector INT
+);
+
 
 CREATE TABLE Director_Assignment_Errors(
     idDirector INT NOT NULL,
     idContent INT NOT NULL,
+    error_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(idDirector,idContent),
     FOREIGN KEY(idDirector) REFERENCES Director(idDirector) ON DELETE CASCADE,
     FOREIGN KEY (idContent) REFERENCES Content(idContent) ON DELETE CASCADE
 );
 
+DROP TRIGGER TRG_Duplicate_Director;
 
 DELIMITER $$
 
 CREATE TRIGGER TRG_Duplicate_Director
-BEFORE INSERT ON Directed_Content
+AFTER INSERT ON Directed_Content_Request
 FOR EACH ROW
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM Directed_Content
-        WHERE idContent = NEW.idContent AND idDirector = NEW.idDirector
-    ) THEN
-        -- Log the duplicate attempt
-        INSERT IGNORE INTO Director_Assignment_Errors(idDirector, idContent)
-        VALUES (NEW.idDirector, NEW.idContent);
+    DECLARE entry_exists INT;
 
-        -- Prevent insertion by setting a bogus value or NULL (soft-block)
+    SET entry_exists = (SELECT COUNT(*) FROM Directed_Content
+                    WHERE idContent = NEW.idContent && idDirector = NEW.idDirector);
+
+    IF entry_exists = 0 THEN
+        INSERT INTO Directed_Content(idContent, idDirector) VALUES
+        (NEW.idContent,NEW.idDirector);
+
+    ELSE
+        INSERT INTO Director_Assignment_Errors(idDirector, idContent) VALUES
+        (NEW.idDirector,NEW.idContent);
     END IF;
 END $$
 
 DELIMITER ;
 
-SELECT * FROM Director_Assignment_Errors;
 SELECT * FROM Directed_Content;
-INSERT INTO Directed_Content(IDCONTENT, IDDIRECTOR) VALUES (1,1);
-
-ALTER TABLE Directed_Content DROP INDEX uniq_director_content;
-
-
+SELECT * FROM Director_Assignment_Errors;
+-- works
+INSERT INTO Directed_Content_Request(IDCONTENT, IDDIRECTOR) VALUES (1,1);

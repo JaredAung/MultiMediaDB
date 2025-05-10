@@ -1,10 +1,10 @@
-USE MultiMediaDB;
-# 7. Generate Monthly User Activity Report
-#
-# Generate a report detailing user activity for the past month, including:
-# The number of content items watched
-# Average ratings provided
-# Hours spent on the platform
+-- USE MultiMediaDB;
+-- # 7. Generate Monthly User Activity Report
+-- #
+-- # Generate a report detailing user activity for the past month, including:
+-- # The number of content items watched
+-- # Average ratings provided
+-- # Hours spent on the platform
 
 DROP PROCEDURE IF EXISTS USER_ACTIVITY_REPORT;
 
@@ -32,10 +32,10 @@ DELIMITER ;
 -- WORKS
 CALL USER_ACTIVITY_REPORT(3);
 
-#
-# Process Batch Content Updates
-#
-# Update the Content_Availability status for multiple Content entries based on a given list of criteria (e.g., release date, view count).
+-- #
+-- # Process Batch Content Updates
+-- #
+-- # Update the Content_Availability status for multiple Content entries based on a given list of criteria (e.g., release date, view count).
 
 DROP PROCEDURE IF EXISTS SET_UNAVAILABLE_FOR_LOW_VIEW_CONTENT;
 
@@ -59,9 +59,11 @@ DELIMITER ;
 -- WORKS
 CALL SET_UNAVAILABLE_FOR_LOW_VIEW_CONTENT();
 
-# 9. Handle Failed Payments
-# Log failed payment attempts into a Payment_Errors table.
-# Send notifications to affected users regarding the failed payments.
+-- # 9. Handle Failed Payments
+-- # Log failed payment attempts into a Payment_Errors table.
+-- # Send notifications to affected users regarding the failed payments.
+
+
 DROP TABLE Payment_Errors;
 CREATE TABLE Payment_Errors(
     idError INT NOT NULL AUTO_INCREMENT,

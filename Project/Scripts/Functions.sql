@@ -68,8 +68,8 @@ DELIMITER ;
 SELECT Rank_Genres_BY_Hours();
 
 
-# 5. Find Most Frequent Collaborators
-# Identify the most frequent actor-director pairs who have worked together.
+-- # 5. Find Most Frequent Collaborators
+-- # Identify the most frequent actor-director pairs who have worked together.
 
 DROP FUNCTION IF EXISTS MOST_FREQUENT_ACTOR_DIRECTOR_PAIR;
 
@@ -100,8 +100,8 @@ DELIMITER ;
 -- WORKS
 SELECT MOST_FREQUENT_ACTOR_DIRECTOR_PAIR();
 
-# 6. Validate Subscription Status
-# Return whether a user’s subscription is active or expired based on their subscription and transaction history.
+-- # 6. Validate Subscription Status
+-- # Return whether a user’s subscription is active or expired based on their subscription and transaction history.
 
 DROP FUNCTION IF EXISTS CHECK_SUBSCRIPTION_STATUS;
 
