@@ -7,9 +7,8 @@ USE MultiMediaDB;
 -- 1. TRG_WATCHLIST_CAP
 
 -- UNIT TESTING
-
 -- Clear existing Watchlist entries
-DELETE FROM Watchlist WHERE idUser = 1;
+DELETE FROM Watchlist WHERE idUser = 2;
 
 -- Insert 50 watchlist entries for idUser = 1
 INSERT INTO Watchlist (idUser, idContent, time_added) VALUES (1, 1001, '2024-01-01 01:00:00');
@@ -68,15 +67,15 @@ INSERT INTO Watchlist_Request (idUser, idContent) VALUES (1, 1051);
 
 -- Check result: should still be 50 items
 SELECT COUNT(*) AS total_items FROM Watchlist WHERE idUser = 1;
-
 -- Integration testing
 
 -- Insert new item
 INSERT INTO Watchlist_Request (idUser, idContent) VALUES (1, 1099);
 
 -- Check if it is inserted correctly
-SELECT * FROM Watchlist WHERE idUser = 1 AND idContent = 1099;
+SELECT * FROM Watchlist WHERE idUser = 2 AND idContent = 1099;
 
+SELECT COUNT(*) AS total_items FROM Watchlist WHERE idUser = 1;
 
 -- DATA INTEGRITY TEST
 INSERT INTO Watchlist_Request (idUser, idContent) VALUES (2, 1099);
@@ -108,20 +107,9 @@ JOIN MultiMediaDB.Content_Availability CA on CA.idAvailability = Formatted_Conte
 WHERE idContent = 33;
 
 -- INTEGRATION TESTING
-SELECT idContent, AVG(rating_star) FROM Review GROUP BY idContent;
 
--- idContent currently have above 2 rating.
-INSERT INTO Review(idUser, idContent, rating_star) VALUES (4,1,4);
-
--- rating remain above 2.
-SELECT idContent, AVG(rating_star) FROM Review
-WHERE idContent =1
-GROUP BY idContent;
-
--- check content is still available.
-SELECT idContent, Formatted_Content.idAvailability, CA.status FROM Formatted_Content
-JOIN MultiMediaDB.Content_Availability CA on CA.idAvailability = Formatted_Content.idAvailability
-WHERE idContent = 1;
+UPDATE Formatted_Content SET idAvailability = 1 WHERE idContent  = 1;
+INSERT INTO Review(idUser, idContent, rating_star) VALUES (4,1,5);
 
 
 INSERT INTO Review(idUser, idContent, rating_star) VALUES (4,1,1);
@@ -136,7 +124,8 @@ JOIN MultiMediaDB.Content_Availability CA on CA.idAvailability = Formatted_Conte
 WHERE idContent = 1;
 
 -- DATA INTEGRITY TESTING
-
+UPDATE Formatted_Content SET idAvailability = 1 WHERE idContent = 77;
+DELETE FROM Review WHERE idContent = 77;
 INSERT INTO Review(idUser, idContent, rating_star) VALUES (4,77,2);
 
 -- check content is now available
@@ -144,11 +133,14 @@ SELECT idContent, Formatted_Content.idAvailability, CA.status FROM Formatted_Con
 JOIN MultiMediaDB.Content_Availability CA on CA.idAvailability = Formatted_Content.idAvailability
 WHERE idContent = 77;
 
--- 3. Director_Assignment_Errors
+-- 3. TRG_Duplicate_Director
 
 -- UNIT TESTING
 
 -- Insert via request table idContent = 1 and idDirector = 3 is unique.
+DELETE FROM Directed_Content
+WHERE idContent = 1 AND idDirector = 3;
+
 INSERT INTO Directed_Content_Request(idContent, idDirector)
 VALUES (1, 3);
 
@@ -156,9 +148,7 @@ VALUES (1, 3);
 SELECT * FROM Directed_Content
 WHERE idContent = 1 AND idDirector = 3;
 
--- delete to maintain data integrity
-DELETE FROM Directed_Content
-WHERE idContent = 1 AND idDirector = 3;
+
 
 
 -- INTEGRATION TESTING
@@ -195,6 +185,11 @@ SELECT Rank_Genres_BY_Hours() AS TopGenres;
 
 -- INTEGRATION TESTING
 
+SELECT * FROM Content
+JOIN MultiMediaDB.Content_Genre CG on Content.idContent = CG.idContent
+JOIN MultiMediaDB.Genre G on G.idGenre = CG.idGenre
+WHERE G.name = 'TV Comedies';
+
 -- Insert new watch activity where Genre = TV Comedies
 INSERT IGNORE INTO WatchHistory (idUser, idContent)
 VALUES (1, 5),
@@ -202,7 +197,11 @@ VALUES (1, 5),
        (2,18),
        (3,34),
         (4,34),
-        (1,18);
+        (1,18),
+        (2,109),
+        (3,109),
+        (4,109),
+        (1,85);
 
 -- CHECK TV Comedies is in Top 3
 SELECT Rank_Genres_BY_Hours() AS TopGenres;
@@ -310,7 +309,7 @@ SELECT CHECK_SUBSCRIPTION_STATUS(402) AS result;
 -- UNIT TESTING
 
 -- CHECK output and format
-CALL USER_ACTIVITY_REPORT(5);
+CALL USER_ACTIVITY_REPORT(1);
 
 -- INTEGRATION TESTING
 

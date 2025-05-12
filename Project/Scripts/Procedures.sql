@@ -31,6 +31,8 @@ DELIMITER ;
 -- WORKS
 CALL USER_ACTIVITY_REPORT(3);
 
+SELECT * FROM WatchHistory;
+
 -- #
 -- # Process Batch Content Updates
 -- #
