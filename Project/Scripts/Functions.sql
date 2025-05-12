@@ -1,3 +1,4 @@
+USE MultiMediaDB;
 -- 4. Rank Top Genres by Watch Hours
 -- Return the top 3 genres based on total watch hours in the last month.
 
@@ -138,5 +139,7 @@ DELIMITER ;
 
 -- Works
 SELECT CHECK_SUBSCRIPTION_STATUS(3);
+
+
 
 

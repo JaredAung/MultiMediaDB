@@ -45,14 +45,7 @@ SELECT * FROM NOTIFICATIONS;
 INSERT INTO User_Subscriptions(idSubscription, end_on, idUser, status) VALUES (2,'2025-04-10',4,1);
 
 
--- WORKS BUT NO NOTI
-
-
-INSERT INTO NOTIFICATIONS(message, idUser)
-        SELECT CONCAT('The subscription of ', U.username, 'has expired.' ),U.idUser
-            FROM User_Subscriptions
-            JOIN MultiMediaDB.User U on U.idUser = User_Subscriptions.idUser
-            WHERE NOW() > end_on OR end_on IS NULL OR status = 0;
+-- WORKS
 
 
 # 11. Refresh Popular Content Rankings

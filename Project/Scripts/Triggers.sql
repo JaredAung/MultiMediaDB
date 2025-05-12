@@ -85,13 +85,12 @@ CREATE TABLE Directed_Content_Request (
     idContent INT,
     idDirector INT
 );
-
+DROP table Director_Assignment_Errors;
 
 CREATE TABLE Director_Assignment_Errors(
     idDirector INT NOT NULL,
     idContent INT NOT NULL,
     error_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(idDirector,idContent),
     FOREIGN KEY(idDirector) REFERENCES Director(idDirector) ON DELETE CASCADE,
     FOREIGN KEY (idContent) REFERENCES Content(idContent) ON DELETE CASCADE
 );

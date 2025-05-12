@@ -282,7 +282,20 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Directed_Content` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 9615
+AUTO_INCREMENT = 9629
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `MultiMediaDB`.`Directed_Content_Request`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `MultiMediaDB`.`Directed_Content_Request` ;
+
+CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Directed_Content_Request` (
+  `idContent` INT NULL DEFAULT NULL,
+  `idDirector` INT NULL DEFAULT NULL)
+ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -295,7 +308,8 @@ DROP TABLE IF EXISTS `MultiMediaDB`.`Director_Assignment_Errors` ;
 CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Director_Assignment_Errors` (
   `idDirector` INT NOT NULL,
   `idContent` INT NOT NULL,
-  PRIMARY KEY (`idDirector`, `idContent`),
+  `error_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idDirector` (`idDirector` ASC) VISIBLE,
   INDEX `idContent` (`idContent` ASC) VISIBLE,
   CONSTRAINT `director_assignment_errors_ibfk_1`
     FOREIGN KEY (`idDirector`)
@@ -396,7 +410,28 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`User` (
   `DOB` DATETIME NOT NULL,
   PRIMARY KEY (`idUser`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 7
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `MultiMediaDB`.`NOTIFICATIONS`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `MultiMediaDB`.`NOTIFICATIONS` ;
+
+CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`NOTIFICATIONS` (
+  `idNotification` INT NOT NULL AUTO_INCREMENT,
+  `message` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `idUser` INT NOT NULL,
+  PRIMARY KEY (`idNotification`),
+  INDEX `idUser` (`idUser` ASC) VISIBLE,
+  CONSTRAINT `notifications_ibfk_1`
+    FOREIGN KEY (`idUser`)
+    REFERENCES `MultiMediaDB`.`User` (`idUser`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -407,11 +442,11 @@ COLLATE = utf8mb4_0900_ai_ci;
 DROP TABLE IF EXISTS `MultiMediaDB`.`Payment_Method` ;
 
 CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Payment_Method` (
-  `idMethod` INT NOT NULL AUTO_INCREMENT,
+  `idMethod` INT NOT NULL,
   `idUser` INT NOT NULL,
   `payment_type` VARCHAR(45) NOT NULL,
   `provider` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`idMethod`),
+  PRIMARY KEY (`idMethod`, `idUser`),
   INDEX `FK_PaymentMethod_User_idx` (`idUser` ASC) VISIBLE,
   CONSTRAINT `FK_PaymentMethod_User`
     FOREIGN KEY (`idUser`)
@@ -419,7 +454,6 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Payment_Method` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 15
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -496,7 +530,7 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Review` (
     REFERENCES `MultiMediaDB`.`User` (`idUser`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 8
+AUTO_INCREMENT = 28
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -534,6 +568,21 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`SubscriptionPlan` (
   PRIMARY KEY (`idSubscription`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 6
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `MultiMediaDB`.`TOP_1O_POPULAR_CONTENT_TODAY`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `MultiMediaDB`.`TOP_1O_POPULAR_CONTENT_TODAY` ;
+
+CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`TOP_1O_POPULAR_CONTENT_TODAY` (
+  `idContent` INT NOT NULL,
+  `name` VARCHAR(200) NOT NULL,
+  `genre` VARCHAR(100) NOT NULL,
+  `total_views` INT NOT NULL)
+ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -578,6 +627,43 @@ COLLATE = utf8mb4_0900_ai_ci;
 
 
 -- -----------------------------------------------------
+-- Table `MultiMediaDB`.`Transaction`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `MultiMediaDB`.`Transaction` ;
+
+CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Transaction` (
+  `idTransaction` INT NOT NULL AUTO_INCREMENT,
+  `idUserSub` INT NOT NULL,
+  `idMethod` INT NOT NULL,
+  `timestamp` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `amount` DECIMAL(8,2) NOT NULL,
+  `status` ENUM('success', 'fail') NOT NULL DEFAULT 'success',
+  `idUser` INT NOT NULL,
+  PRIMARY KEY (`idTransaction`),
+  INDEX `FK_Transaction_PaymentMethod_idx` (`idMethod` ASC) VISIBLE,
+  INDEX `FK_Transaction_User` (`idUser` ASC) VISIBLE,
+  INDEX `FK_Transaction_PaymentMethod_Owner` (`idMethod` ASC, `idUser` ASC) VISIBLE,
+  INDEX `Fk_Transaction_UserSub_idx` (`idUserSub` ASC) VISIBLE,
+  CONSTRAINT `FK_Transaction_PaymentMethod_Owner`
+    FOREIGN KEY (`idMethod` , `idUser`)
+    REFERENCES `MultiMediaDB`.`Payment_Method` (`idMethod` , `idUser`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `FK_Transaction_User`
+    FOREIGN KEY (`idUser`)
+    REFERENCES `MultiMediaDB`.`User` (`idUser`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `Fk_Transaction_UserSub`
+    FOREIGN KEY (`idUserSub`)
+    REFERENCES `MultiMediaDB`.`user_subscriptions` (`idUserSub`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
 -- Table `MultiMediaDB`.`User_Subscriptions`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `MultiMediaDB`.`User_Subscriptions` ;
@@ -600,32 +686,7 @@ CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`User_Subscriptions` (
     REFERENCES `MultiMediaDB`.`User` (`idUser`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 23
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `MultiMediaDB`.`Transaction`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `MultiMediaDB`.`Transaction` ;
-
-CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Transaction` (
-  `idTransaction` INT NOT NULL AUTO_INCREMENT,
-  `idUserSub` INT NOT NULL,
-  `idMethod` INT NOT NULL,
-  `timestamp` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`idTransaction`),
-  INDEX `FK_Transaction_PaymentMethod_idx` (`idMethod` ASC) VISIBLE,
-  INDEX `Fk_Transaction_UserSub_idx` (`idUserSub` ASC) VISIBLE,
-  CONSTRAINT `FK_Transaction_PaymentMethod`
-    FOREIGN KEY (`idMethod`)
-    REFERENCES `MultiMediaDB`.`Payment_Method` (`idMethod`),
-  CONSTRAINT `Fk_Transaction_UserSub`
-    FOREIGN KEY (`idUserSub`)
-    REFERENCES `MultiMediaDB`.`User_Subscriptions` (`idUserSub`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 8
+AUTO_INCREMENT = 30
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -680,6 +741,28 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+
+-- -----------------------------------------------------
+-- Table `MultiMediaDB`.`Watchlist_Request`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `MultiMediaDB`.`Watchlist_Request` ;
+
+CREATE TABLE IF NOT EXISTS `MultiMediaDB`.`Watchlist_Request` (
+  `idUser` INT NOT NULL,
+  `idContent` INT NOT NULL,
+  `date_requested` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`idUser`, `idContent`),
+  INDEX `idContent` (`idContent` ASC) VISIBLE,
+  CONSTRAINT `watchlist_request_ibfk_1`
+    FOREIGN KEY (`idUser`)
+    REFERENCES `MultiMediaDB`.`User` (`idUser`),
+  CONSTRAINT `watchlist_request_ibfk_2`
+    FOREIGN KEY (`idContent`)
+    REFERENCES `MultiMediaDB`.`Content` (`idContent`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
 USE `MultiMediaDB` ;
 
 -- -----------------------------------------------------
@@ -717,6 +800,36 @@ BEGIN
         END IF;
 
     end$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure LOG_FAILED_PAYMENTS
+-- -----------------------------------------------------
+
+USE `MultiMediaDB`;
+DROP procedure IF EXISTS `MultiMediaDB`.`LOG_FAILED_PAYMENTS`;
+
+DELIMITER $$
+USE `MultiMediaDB`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `LOG_FAILED_PAYMENTS`()
+BEGIN
+    INSERT IGNORE INTO Payment_Errors(idTransaction, idUser, error_message)
+    SELECT T.idTransaction, U.idUser, CONCAT(U.username,' payment of $', T.amount, ' has failed')
+    FROM MultiMediaDB.Transaction T
+    JOIN MultiMediaDB.User_Subscriptions US on T.idUserSub = US.idUserSub
+    JOIN MultiMediaDB.User U on U.idUser = US.idUser
+    WHERE T.status = 'fail';
+
+    INSERT IGNORE INTO NOTIFICATIONS(MESSAGE, IDUSER)
+    SELECT PE.error_message,PE.idUser
+    FROM Payment_Errors PE
+    LEFT JOIN NOTIFICATIONS N ON N.message = PE.error_message AND N.idUser = PE.idUser
+    WHERE N.idNotification IS NULL;
+
+
+
+end$$
 
 DELIMITER ;
 
@@ -854,7 +967,6 @@ DELIMITER $$
 USE `MultiMediaDB`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `USER_ACTIVITY_REPORT`(IN idUser INT)
 BEGIN
-
     SELECT COUNT(DISTINCT WH.idContent) AS NUMBER_OF_CONTENT,
            ROUND(SUM(COALESCE(M.duration,0)/60 + COALESCE(S.duration,0)),2) AS TIME_SPENT,
            (SELECT ROUND(AVG(R.rating_star),2)
@@ -867,8 +979,7 @@ BEGIN
     LEFT JOIN MultiMediaDB.`Show` S on C.idContent = S.idContent
     WHERE WH.idUser = idUser
     AND WH.watch_time >= NOW() - INTERVAL 1 MONTH;
-
-end$$
+END$$
 
 DELIMITER ;
 USE `MultiMediaDB`;
@@ -881,18 +992,21 @@ USE `MultiMediaDB`$$
 CREATE
 DEFINER=`root`@`localhost`
 TRIGGER `MultiMediaDB`.`TRG_Duplicate_Director`
-BEFORE INSERT ON `MultiMediaDB`.`Directed_Content`
+AFTER INSERT ON `MultiMediaDB`.`Directed_Content_Request`
 FOR EACH ROW
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM Directed_Content
-        WHERE idContent = NEW.idContent AND idDirector = NEW.idDirector
-    ) THEN
-        -- Log the duplicate attempt
-        INSERT IGNORE INTO Director_Assignment_Errors(idDirector, idContent)
-        VALUES (NEW.idDirector, NEW.idContent);
+    DECLARE entry_exists INT;
 
-        -- Prevent insertion by setting a bogus value or NULL (soft-block)
+    SET entry_exists = (SELECT COUNT(*) FROM Directed_Content
+                    WHERE idContent = NEW.idContent && idDirector = NEW.idDirector);
+
+    IF entry_exists = 0 THEN
+        INSERT INTO Directed_Content(idContent, idDirector) VALUES
+        (NEW.idContent,NEW.idDirector);
+
+    ELSE
+        INSERT INTO Director_Assignment_Errors(idDirector, idContent) VALUES
+        (NEW.idDirector,NEW.idContent);
     END IF;
 END$$
 
@@ -918,6 +1032,39 @@ BEGIN
         END IF;
 
     end$$
+
+
+USE `MultiMediaDB`$$
+DROP TRIGGER IF EXISTS `MultiMediaDB`.`TRG_WATCHLIST_CAP` $$
+USE `MultiMediaDB`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `MultiMediaDB`.`TRG_WATCHLIST_CAP`
+BEFORE INSERT ON `MultiMediaDB`.`Watchlist_Request`
+FOR EACH ROW
+BEGIN
+    DECLARE count INT DEFAULT 0;
+    DECLARE oldest_id INT;
+
+    -- Count current items in user's watchlist
+    SET count = (SELECT COUNT(idContent)
+                FROM Watchlist
+                WHERE idUser = NEW.idUser);
+
+    -- If already at or above limit, remove oldest item
+    IF count >= 50 THEN
+        SET oldest_id = (SELECT idContent FROM Watchlist
+                        WHERE idUser = NEW.idUser
+                        ORDER BY time_added ASC
+                        LIMIT 1);
+
+        DELETE FROM Watchlist
+        WHERE idUser = NEW.idUser
+        AND idContent = oldest_id;
+    END IF;
+
+    INSERT INTO Watchlist(idUser, idContent) VALUES (NEW.idUser,NEW.idContent);
+END$$
 
 
 DELIMITER ;

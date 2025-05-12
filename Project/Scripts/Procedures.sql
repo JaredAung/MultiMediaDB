@@ -1,4 +1,4 @@
--- USE MultiMediaDB;
+ USE MultiMediaDB;
 -- # 7. Generate Monthly User Activity Report
 -- #
 -- # Generate a report detailing user activity for the past month, including:
@@ -8,11 +8,10 @@
 
 DROP PROCEDURE IF EXISTS USER_ACTIVITY_REPORT;
 
-DELIMITER $$
 
+DELIMITER $$
 CREATE PROCEDURE USER_ACTIVITY_REPORT(IN idUser INT)
 BEGIN
-
     SELECT COUNT(DISTINCT WH.idContent) AS NUMBER_OF_CONTENT,
            ROUND(SUM(COALESCE(M.duration,0)/60 + COALESCE(S.duration,0)),2) AS TIME_SPENT,
            (SELECT ROUND(AVG(R.rating_star),2)
@@ -25,10 +24,10 @@ BEGIN
     LEFT JOIN MultiMediaDB.`Show` S on C.idContent = S.idContent
     WHERE WH.idUser = idUser
     AND WH.watch_time >= NOW() - INTERVAL 1 MONTH;
-
-end $$
+END $$
 
 DELIMITER ;
+
 -- WORKS
 CALL USER_ACTIVITY_REPORT(3);
 
